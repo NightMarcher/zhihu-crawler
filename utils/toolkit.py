@@ -1,15 +1,26 @@
+# utils/toolkit.py
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-import logging, time
+import logging, os, time
 import logging.config
 
 import requests, yaml
 
-with open('settings/logging.yaml', 'r') as f:
-    config = yaml.load(f.read())
-    logging.config.dictConfig(config)
 logger = logging.getLogger(__name__)
+
+
+def init_logging():
+    with open('settings/logging.yaml', 'r') as f:
+        logging_config = yaml.load(f.read())
+        log_dir = logging_config['handlers']['file']['filename']
+    if not os.path.exists('log/'):
+        os.mkdir('log/')
+    if not os.path.exists(log_dir):
+        with open(log_dir, 'w') as f:
+            f.write('### Started ###')
+    logging.config.dictConfig(logging_config)
+
 
 def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):
     headers = {
@@ -22,8 +33,8 @@ def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):
     try:
         response = requests.request(method, url, timeout=timeout, headers=headers, **payload)
     except Exception as e:
-        logger.exception('Exception Found!')
-        raise e
+        logger.exception('HTTP Exception Found!')
+        return None, str(e)
     if not response.ok:
         return False, f'URL: {response.url}, Status Code: {response.status_code}, Reason: {response.reason}'
     else:
@@ -32,6 +43,7 @@ def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):
         elif rtype is 'HTML':
             response.encoding = 'UTF-8'
             return True, response.text
+
 
 def timecost(func):
     def wrapper(*args, **kwargs):

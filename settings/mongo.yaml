@@ -1,0 +1,6 @@
+# settings/mongo.yaml
+
+host: localhost
+port: 27017
+db: ZhihuCrawler
+

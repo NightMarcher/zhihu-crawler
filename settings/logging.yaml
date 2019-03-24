@@ -1,4 +1,8 @@
+# settings/logging.yaml
+
 version: 1
+
+disable_existing_loggers: False
 
 formatters:
   default:
@@ -16,7 +20,7 @@ handlers:
     filename: log/loggers.log
     mode: a
     encoding: utf8
-    maxBytes: 10485760 # 1024*1024*10(10MB)
+    maxBytes: 10485760 # 1024 * 1024 * 10(10MB)
     backupCount: 10
 
 root:
@@ -24,3 +28,4 @@ root:
     - console
     - file
   level: DEBUG
+

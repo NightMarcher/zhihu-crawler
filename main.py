@@ -1,26 +1,32 @@
+# main.py
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
+import logging
 
+from utils.mongo import Mongo
+from utils.toolkit import init_logging
 from crawling.crawler import Crawler
-from utils.toolkit import logging
 
+init_logging()
 logger = logging.getLogger(__name__)
-ZHIHU_URL = 'https://www.zhihu.com'
+
+
+def get_all_topics():
+    crawler = Crawler()
+    home_topics = crawler.get_home_topics() or []
+    logger.info(f'{len(home_topics)} home topics were found.')
+    all_topics = []
+    for ht in home_topics:
+        topics = crawler.get_topics_by_home_topic(ht) or []
+        logger.info(f'{len(topics)} topics were found under home topic {ht}.')
+        all_topics.extend(topics)
+        break # for debug
+    return all_topics
+
 
 if __name__ == '__main__':
-    crawler = Crawler(ZHIHU_URL)
+    topics = get_all_topics()
+    crawler = Crawler()
+    topic_iter = map(crawler.get_topic_data, topics)
 
-    top_topics = crawler.get_top_topics()
-    logger.info(f'{len(top_topics)} top topics were found!')
-
-    all_topics = []
-    for top_topic in top_topics:
-        topics = crawler.get_all_topics(top_topic)
-        logger.info(f'{len(topics)} topics were found under top topic {top_topic}!')
-        all_topics.extend(topics)
-        break # debug
-
-    for topic in all_topics:
-        topic_info = crawler.get_topic_info(topic)
-        break # debug

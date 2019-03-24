@@ -1,7 +1,9 @@
+# crawling/crawler.py
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-import datetime, time
+import datetime, logging, os, time
+from operator import attrgetter, itemgetter
 
 from lxml import etree
 from selenium import webdriver
@@ -11,26 +13,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
-from utils.toolkit import get_http_respense, logging, timecost
+from utils.toolkit import get_http_respense, timecost
 
 logger = logging.getLogger(__name__)
 CHROME_DRIVER_PATH = 'crawling/chromedriver'
-
-class TopTopicsLocatingError(Exception):
-    def __init__(self, error_msg):
-        super(TopTopicsLocatingError, self).__init__()
-        self.error_msg = error_msg
-
-
-class TopicInfoCrawlingError(object):
-    def __init__(self, error_msg):
-        super(TopicInfoCrawlingError, self).__init__()
-        self.error_msg = error_msg
+ZHIHU_URL = 'https://www.zhihu.com/'
 
 
 class Crawler:
-    def __init__(self, main_url):
-        self.main_url = main_url
+    def __init__(self):
+        self.main_url = ZHIHU_URL
+        self.webdriver_dir = CHROME_DRIVER_PATH
 
     def open_main_page(self):
         try:
@@ -39,96 +32,104 @@ class Crawler:
         except Exception as e:
             logger.exception('Exception Found!')
         finally:
-            wd.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+            wd.execute_script("window.scrollTo(0, document.body.scrollHeight)")
             qr_img_url = element.find_element_by_tag_name('img').get_attribute('src')
 
     @timecost
-    def get_top_topics(self):
+    def get_home_topics(self):
+        url = os.path.join(self.main_url, 'topics')
+        flag, result = get_http_respense(url, method='GET', rtype='HTML')
+        if not flag:
+            logger.error(f'Got unusual http response:\n{result}')
+            return None
+        tree = etree.HTML(result)
         try:
-            flag, info = get_http_respense(self.main_url+'/topics', method='GET', rtype='HTML')
+            home_topic_elements = tree.xpath('//li[@class="zm-topic-cat-item"]/a')
         except Exception as e:
-            raise e
-        if flag is False:
-            logger.error(f'Got unusual http response:\n{info}')
-            raise TopTopicsLocatingError('Cannot locate top topics!')
-        tree = etree.HTML(info)
-        top_topic_elements = tree.xpath('//li[@class="zm-topic-cat-item"]/a')
-        top_topics = [ele.text for ele in top_topic_elements]
-        logger.debug(f'top topics:\n{top_topics}')
-        return top_topics
+            logger.exception(f'Home topic page was changed!\n{e}')
+            return None
+        home_topics = [hte.text for hte in home_topic_elements]
+        logger.info(f'home topics:\n{home_topics}')
+        return home_topics
 
     @timecost
-    def get_all_topics(self, top_topic):
+    def get_topics_by_home_topic(self, home_topic):
         options = webdriver.ChromeOptions()
         options.add_argument('lang=zh_CN.UTF-8')
-        options.add_argument('--headless')
-        wd = webdriver.Chrome(CHROME_DRIVER_PATH, chrome_options=options)
+        options.add_argument('--headless') # for debug
+        wd = webdriver.Chrome(self.webdriver_dir, chrome_options=options)
         wd.implicitly_wait(0.1)
-        wd.get(self.main_url + '/topics#' + top_topic)
+        url = os.path.join(self.main_url, 'topics#'+home_topic)
+        wd.get(url)
         click_times = 0
         while True:
             try:
                 wd.find_element_by_xpath('//a[@class="zg-btn-white zu-button-more"]').click()
                 logger.debug('Click +1!')
-            except Exception:
-                logger.info(f'Click {click_times} time(s) under top topic {top_topic}')
-                break
+            except Exception as e:
+                logger.info(f'Click {click_times} time(s) under home topic {home_topic}')
+                break # for debug
             else:
                 click_times += 1
                 time.sleep(1)
-                break # debug
+                break # for debug
         tree = etree.HTML(wd.page_source)
-        topic_elements = tree.xpath('//div[@class="item"]//a[@target="_blank"]')
+        try:
+            topic_elements = tree.xpath('//div[@class="item"]//a[@target="_blank"]')
+        except Exception as e:
+            logger.exception(f'Sub home topic pages were changed!\n{e}')
+            return None
         topics = [
                     {
-                    'topic_id': ele.get('href').split(r'/')[-1],
-                    'name': ele.find('strong').text,
+                    'topic_id': te.get('href').split(r'/')[-1],
+                    'name': te.find('strong').text,
                     }
-                for ele in topic_elements]
-        logger.debug(f'topics:\n{topics}')
+                for te in topic_elements]
+        logger.info(f'topics:\n{topics}')
         return topics
 
-    def _get_relative_topic_ids_by_page(self, topic_id, topic_type, page_size):
+    def _get_relative_topic_ids(self, topic_id, relative_type, page_size):
         offset = 0
         topic_ids = []
         while True:
-            try:
-                flag, info = get_http_respense(f'{self.main_url}/api/v3/topics/{topic_id}/{topic_type}?limit={page_size}&offset={offset}', method='GET', rtype='JSON')
-            except Exception as e:
-                raise e
-            if flag is False:
-                logger.error(f'Got unusual http response:\n{info}')
-                raise TopicInfoCrawlingError('Cannot get relative topic info correctly!')
-            if not info['data']:
+            url = os.path.join(self.main_url, f'api/v3/topics/{topic_id}/{relative_type}?limit={page_size}&offset={offset}')
+            flag, result = get_http_respense(url, method='GET', rtype='JSON')
+            if not flag:
+                logger.error(f'Got unusual http response:\n{result}')
+                return None
+            data = result.get('data')
+            if not data:
                 return topic_ids
-            infos = [item['id'] for item in info['data'] if item['id'] != topic_id]
-            topic_ids.extend(infos)
+            topic_ids.extend(map(itemgetter('id'), data))
             offset += page_size
 
     @timecost
-    def get_topic_info(self, topic):
-        logger.debug(f'Crawling Topic {topic["name"]}')
-        # topic main info
+    def get_topic_data(self, topic):
+        logger.debug(f'Crawling data for topic {topic["name"]}')
+        # topic data
+        url = os.path.join(self.main_url, f'topic/{topic["topic_id"]}/hot')
+        flag, result = get_http_respense(url, method='GET', rtype='HTML')
+        if not flag:
+            logger.error(f'Got unusual http response:\n{result}')
+            return None
+        tree = etree.HTML(result)
         try:
-            flag, info = get_http_respense(self.main_url+f'/topic/{topic["topic_id"]}/top-answers', method='GET', rtype='HTML')
+            number_board = tree.xpath('//strong[@class="NumberBoard-itemValue"]')
         except Exception as e:
-            raise e
-        if flag is False:
-            logger.error(f'Got unusual http response:\n{info}')
-            raise TopicInfoCrawlingError('Cannot get main topic info correctly!')
-        tree = etree.HTML(info)
-        number_board = tree.xpath('//strong[@class="NumberBoard-itemValue"]')
-        follower_num, question_num = number_board[0].get('title'), number_board[1].get('title')
-        logger.debug(f'follower num: {follower_num}, question num: {question_num}')
-        # relative topic info
-        parent_topic_ids = self._get_relative_topic_ids_by_page(topic["topic_id"], 'parent', 10)
-        children_topic_ids = self._get_relative_topic_ids_by_page(topic["topic_id"], 'children', 10)
+            logger.exception(f'number board was changed!\n{e}')
+            return None
+        follower_num, question_num = tuple(map(lambda nb: int(nb.get('title')), number_board))
+        logger.debug(f'follower_num: {follower_num}, question_num: {question_num}')
+        # relative topic ids
+        parent_topic_ids = self._get_relative_topic_ids(topic['topic_id'], 'parent', 10)
+        children_topic_ids = self._get_relative_topic_ids(topic['topic_id'], 'children', 10)
         logger.debug(f'parent_topic_ids: {parent_topic_ids}, children_topic_ids: {children_topic_ids}')
+        # update data
         topic.update({
-                    'follower_num': follower_num,
-                    'question_num': question_num,
-                    'parent_topic_ids': parent_topic_ids,
-                    'children_topic_ids': children_topic_ids,
-                    })
+                'follower_num': follower_num,
+                'question_num': question_num,
+                'parent_topic_ids': parent_topic_ids,
+                'children_topic_ids': children_topic_ids,
+                })
         return topic
 
