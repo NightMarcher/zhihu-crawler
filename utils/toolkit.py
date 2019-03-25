@@ -6,11 +6,13 @@ import logging, os, time
 import logging.config
 
 import requests, yaml
+from redis import ConnectionPool, Redis
+
 
 logger = logging.getLogger(__name__)
 
 
-def init_logging():
+def logging_init():
     with open('settings/logging.yaml', 'r') as f:
         logging_config = yaml.load(f.read())
         log_dir = logging_config['handlers']['file']['filename']
@@ -20,6 +22,17 @@ def init_logging():
         with open(log_dir, 'w') as f:
             f.write('### Started ###')
     logging.config.dictConfig(logging_config)
+
+
+def redis_init():
+    with open('settings/redis.yaml', 'r') as f:
+        redis_config = yaml.load(f.read())
+    try:
+        pool = ConnectionPool(host=redis_config['host'], port=redis_config['port'], db=redis_config['db'], decode_responses=True)
+    except Exception as e:
+        logger.exception('Redis Connecting Failed!')
+    redis = Redis(connection_pool=self._pool)
+    return redis
 
 
 def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):

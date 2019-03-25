@@ -5,10 +5,10 @@ from __future__ import absolute_import
 import logging
 
 from utils.mongo import Mongo
-from utils.toolkit import init_logging
+from utils.toolkit import logging_init, redis_init
 from crawling.crawler import Crawler
 
-init_logging()
+logging_init()
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +26,7 @@ def get_all_topics():
 
 
 if __name__ == '__main__':
+    redis = redis_init()
     topics = get_all_topics()
     crawler = Crawler()
     topic_iter = map(crawler.get_topic_data, topics)

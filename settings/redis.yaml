@@ -1,0 +1,6 @@
+# settings/redis.yaml
+
+host: localhost
+port: 6379
+db: 7
+
