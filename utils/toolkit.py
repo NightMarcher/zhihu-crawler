@@ -20,7 +20,7 @@ def logging_init():
         os.mkdir('log/')
     if not os.path.exists(log_dir):
         with open(log_dir, 'w') as f:
-            f.write('### Started ###')
+            f.write('### ### ### Started ### ### ###\n')
     logging.config.dictConfig(logging_config)
 
 

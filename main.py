@@ -57,7 +57,7 @@ def get_need_update_topics_iter(redis, topics):
         to_hash_str = json.dumps(to_hash_dict, ensure_ascii=False, sort_keys=True)
         hash_str = md5(to_hash_str.encode()).hexdigest()
         topic_dict['hash_digest'] = hash_str
-    map(_calc_hash_by_fileds, topics)
+    [*map(_calc_hash_by_fileds, topics)]
     topics_id_hash_dict = redis.hgetall('topics')
     return filter(lambda topic: topic['hash_digest'] != topics_id_hash_dict.get(topic['topic_id']), topics)
 
@@ -79,6 +79,7 @@ def main():
     sync_redis_with_mongo(redis, mongo)
     crawler = Crawler()
     topics = get_all_topics(crawler)
+    [*map(crawler.get_topic_data, topics)]
     need_update_topics_iter = get_need_update_topics_iter(redis, topics)
     update_redis_and_mongo_to_lasted(need_update_topics_iter, redis, mongo)
 

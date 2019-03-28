@@ -131,5 +131,4 @@ class Crawler:
                 'parent_topic_ids': parent_topic_ids,
                 'children_topic_ids': children_topic_ids,
                 })
-        return topic
 
