@@ -31,8 +31,28 @@ def redis_init():
         pool = ConnectionPool(host=redis_config['host'], port=redis_config['port'], db=redis_config['db'], decode_responses=True)
     except Exception as e:
         logger.exception('Redis Connecting Failed!')
-    redis = Redis(connection_pool=self._pool)
+    redis = Redis(connection_pool=pool)
     return redis
+
+
+class AttrDict(dict):
+    def __getattr__(self, attr):
+        try:
+            value = self[attr]
+        except KeyError:
+            raise AttributeError('Attribute "{}" does not exist.'.format(attr))
+        if isinstance(value, dict):
+            value = AttrDict(value)
+        return value
+
+    def __setattr__(self, name, value):
+        self[name] = value
+
+    def __delattr__(self, name):
+        if name in self:
+            del self[name]
+        else:
+            raise AttributeError('Attribute "{}" does not exist.'.format(attr))
 
 
 def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):

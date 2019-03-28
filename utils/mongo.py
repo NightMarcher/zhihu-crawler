@@ -25,13 +25,20 @@ class Mongo:
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
+        # cannot close client
         self._client.close()
 
-    def update_one(self, query, data, collection, upsert=True):
+    def find(self, col, filters=None, fields=None, **kwargs):
+        # TODO batch_size, limit, max_time_ms, sort
+        return self._db[col].find(filters, fields, **kwargs)
+
+    def update_one(self, col, query, data, upsert=True):
         if not isinstance(data, dict):
-            logger.warning(f'data {data} is not instance of dict, can not be updated!')
+            logger.warning(f'Following data is not instance of dict, MongoDB can not be updated!\n{data}')
             return None
         data['last_updated'] = datetime.utcnow()
-        result = self._db[collection].update_one(query, {'$set': data}, upsert=upsert)
-        return result.upserted_id
-
+        cur = self._db[col].update_one(query, {'$set': data}, upsert=upsert)
+        if cur.upserted_id is None:
+            logger.error(f'Following query updated failed!\n{query}')
+        else:
+            logger.debug(f'Mongo collection {cur.upserted_id} updated succeed!')
