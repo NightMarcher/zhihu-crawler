@@ -4,6 +4,7 @@
 from __future__ import absolute_import
 import json, logging
 from hashlib import md5
+from multiprocessing.dummy import Pool as ThreadPool
 
 from utils.mongo import Mongo
 from utils.toolkit import logging_init, redis_init
@@ -37,15 +38,21 @@ def sync_redis_with_mongo(redis, mongo):
     logger.info('Redis sync with MongoDB succeed!')
 
 
-def get_all_topics(crawler):
+def get_all_topics(crawler, thread_num=4):
     home_topics = crawler.get_home_topics() or []
     logger.info(f'{len(home_topics)} home topics were found.')
+    pool = ThreadPool(processes=thread_num)
     all_topics = []
-    for ht in home_topics:
-        topics = crawler.get_topics_by_home_topic(ht) or []
-        logger.info(f'{len(topics)} topics were found under home topic {ht}.')
-        all_topics.extend(topics)
-        break # for debug
+    for t in pool.map(crawler.get_topics_by_home_topic, home_topics):
+        all_topics.extend(t)
+    pool.close()
+    pool.join()
+    # for ht in home_topics:
+    #     topics = crawler.get_topics_by_home_topic(ht) or []
+    #     logger.info(f'{len(topics)} topics were found under home topic {ht}.')
+    #     all_topics.extend(topics)
+        # break # for debug
+    logger.info(f'{len(all_topics)} topics were found in total.')
     return all_topics
 
 
@@ -64,7 +71,7 @@ def get_need_update_topics_iter(redis, topics):
 
 def update_redis_and_mongo_to_lasted(need_update_topics_iter, redis, mongo):
     for topic in need_update_topics_iter:
-        redis.hset('tpoics', topic['topic_id'], topic['hash_digest'])
+        redis.hset('topics', topic['topic_id'], topic['hash_digest'])
         mongo.update_one(
                 col='topics',
                 query={'topic_id': topic['topic_id']},
@@ -79,9 +86,15 @@ def main():
     sync_redis_with_mongo(redis, mongo)
     crawler = Crawler()
     topics = get_all_topics(crawler)
-    [*map(crawler.get_topic_data, topics)]
+    logger.info(f'{topics}')
+    pool = ThreadPool(processes=8)
+    pool.map(crawler.get_topic_data, topics)
+    pool.close()
+    pool.join()
+    # [*map(crawler.get_topic_data, topics)]
     need_update_topics_iter = get_need_update_topics_iter(redis, topics)
     update_redis_and_mongo_to_lasted(need_update_topics_iter, redis, mongo)
+
 
 if __name__ == '__main__':
     main()

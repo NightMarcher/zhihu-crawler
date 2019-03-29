@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-import datetime, logging, os, time
+import logging, os, time
 from operator import attrgetter, itemgetter
 
 from lxml import etree

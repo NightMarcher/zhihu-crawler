@@ -4,17 +4,17 @@
 from __future__ import absolute_import
 import logging, os, time
 import logging.config
+from functools import wraps
 
 import requests, yaml
 from redis import ConnectionPool, Redis
-
 
 logger = logging.getLogger(__name__)
 
 
 def logging_init():
     with open('settings/logging.yaml', 'r') as f:
-        logging_config = yaml.load(f.read())
+        logging_config = yaml.safe_load(f.read())
         log_dir = logging_config['handlers']['file']['filename']
     if not os.path.exists('log/'):
         os.mkdir('log/')
@@ -26,7 +26,7 @@ def logging_init():
 
 def redis_init():
     with open('settings/redis.yaml', 'r') as f:
-        redis_config = yaml.load(f.read())
+        redis_config = yaml.safe_load(f.read())
     try:
         pool = ConnectionPool(host=redis_config['host'], port=redis_config['port'], db=redis_config['db'], decode_responses=True)
     except Exception as e:
@@ -79,6 +79,7 @@ def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):
 
 
 def timecost(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         start = time.clock()
         result = func(*args, **kwargs)

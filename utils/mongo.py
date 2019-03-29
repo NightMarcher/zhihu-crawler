@@ -9,7 +9,7 @@ import pymongo, yaml
 
 logger = logging.getLogger(__name__)
 with open('settings/mongo.yaml', 'r') as f:
-    mongo_config = yaml.load(f.read())
+    mongo_config = yaml.safe_load(f.read())
 
 
 class Mongo:
@@ -42,3 +42,4 @@ class Mongo:
             logger.error(f'Following query updated failed!\n{query}')
         else:
             logger.debug(f'Mongo collection {cur.upserted_id} updated succeed!')
+
