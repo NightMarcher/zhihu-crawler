@@ -65,7 +65,7 @@ class Crawler:
         while True:
             try:
                 wd.find_element_by_xpath('//a[@class="zg-btn-white zu-button-more"]').click()
-                logger.debug('Click +1!')
+                logger.debug(f'{home_topic} Click +1!')
             except Exception as e:
                 logger.info(f'Click {click_times} time(s) under home topic {home_topic}')
                 break # for debug
@@ -131,4 +131,5 @@ class Crawler:
                 'parent_topic_ids': parent_topic_ids,
                 'children_topic_ids': children_topic_ids,
                 })
+        return topic
 

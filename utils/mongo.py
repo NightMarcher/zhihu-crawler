@@ -38,8 +38,8 @@ class Mongo:
             return None
         data['last_updated'] = datetime.utcnow()
         cur = self._db[col].update_one(query, {'$set': data}, upsert=upsert)
-        if cur.upserted_id is None:
-            logger.error(f'Following query updated failed!\n{query}')
-        else:
-            logger.debug(f'Mongo collection {cur.upserted_id} updated succeed!')
+        if cur.upserted_id is not None:
+            logger.debug(f'Mongo collection {cur.upserted_id} inserted succeed!')
+        elif cur.modified_count is 0:
+            logger.error(f'Following query updated failed!\nquery={query}, matched_count={cur.matched_count}, modified_count={cur.modified_count}, upserted_id={cur.upserted_id}')
 
