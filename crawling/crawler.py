@@ -49,7 +49,7 @@ class Crawler:
             logger.exception(f'Home topic page was changed!\n{e}')
             return None
         home_topics = [hte.text for hte in home_topic_elements]
-        logger.info(f'home topics:\n{home_topics}')
+        logger.info(f'{len(home_topics)} home topics were founded:\n{home_topics}')
         return home_topics
 
     @timecost
@@ -85,7 +85,7 @@ class Crawler:
                     'name': te.find('strong').text,
                     }
                 for te in topic_elements]
-        logger.info(f'topics:\n{topics}')
+        logger.info(f'{len(topics)} topics were founded under home topic {home_topic}:\n{topics}.')
         return topics
 
     def _get_relative_topic_ids(self, topic_id, relative_type, page_size):
@@ -105,7 +105,6 @@ class Crawler:
 
     @timecost
     def get_topic_data(self, topic):
-        logger.debug(f'Crawling data for topic {topic["name"]}')
         # topic data
         url = os.path.join(self.main_url, f'topic/{topic["topic_id"]}/hot')
         flag, result = get_http_respense(url, method='GET', rtype='HTML')
@@ -116,14 +115,13 @@ class Crawler:
         try:
             number_board = tree.xpath('//strong[@class="NumberBoard-itemValue"]')
         except Exception as e:
-            logger.exception(f'number board was changed!\n{e}')
+            logger.exception(f'Number board was changed!\n{e}')
             return None
         follower_num, question_num = tuple(map(lambda nb: int(nb.get('title')), number_board))
-        logger.debug(f'follower_num: {follower_num}, question_num: {question_num}')
         # relative topic ids
         parent_topic_ids = self._get_relative_topic_ids(topic['topic_id'], 'parent', 10)
         children_topic_ids = self._get_relative_topic_ids(topic['topic_id'], 'children', 10)
-        logger.debug(f'parent_topic_ids: {parent_topic_ids}, children_topic_ids: {children_topic_ids}')
+        logger.info(f'Crawled data for topic {topic["name"]}:\nfollower_num: {follower_num}, question_num: {question_num}, parent_topic_ids: {parent_topic_ids}, children_topic_ids: {children_topic_ids}')
         # update data
         topic.update({
                 'follower_num': follower_num,
@@ -131,5 +129,4 @@ class Crawler:
                 'parent_topic_ids': parent_topic_ids,
                 'children_topic_ids': children_topic_ids,
                 })
-        return topic
 

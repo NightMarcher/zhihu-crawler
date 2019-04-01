@@ -40,7 +40,7 @@ class AttrDict(dict):
         try:
             value = self[attr]
         except KeyError:
-            raise AttributeError('Attribute "{}" does not exist.'.format(attr))
+            raise AttributeError(f'Attribute "{attr}" does not exist.')
         if isinstance(value, dict):
             value = AttrDict(value)
         return value
@@ -52,7 +52,7 @@ class AttrDict(dict):
         if name in self:
             del self[name]
         else:
-            raise AttributeError('Attribute "{}" does not exist.'.format(attr))
+            raise AttributeError(f'Attribute "{attr}" does not exist.')
 
 
 def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):
