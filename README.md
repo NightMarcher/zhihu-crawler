@@ -26,8 +26,10 @@ MD5，选择原因见[Hashing Algorithms In Python](http://widerin.net/blog/hash
 - [x] **数据持久化**     
 MongoDB，时间类型数据统一存储为格林尼治时间
 - [ ] **定时任务**
-- [ ] **任务管理**
+- [ ] **任务管理**   
+supervisor
 - [x] **并发实现**   
 multiprocessing.dummy多线程，易于移植，方法简单
 - [ ] **话题树建立**
-- [ ] **网页展示**
+- [ ] **网页展示**   
+flask框架 + bootstrap-flask + pyecharts
