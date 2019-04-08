@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% block head %}
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    {{ bootstrap.load_css() }}
+    {% block styles %}{% endblock %}
+    <title>ZhihuCrawler</title>
+    {% block title %}{% endblock %}
+    {% endblock %}
+  </head>
+
+  <body{% block body_attribs %}{% endblock body_attribs %}>
+    <!-- Page contont -->
+    {% block content %}{% endblock %}
+    {% block footer %}{% endblock %}
+    <!-- Optional JavaScript -->
+    {{ bootstrap.load_js() }}
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+

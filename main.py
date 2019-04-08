@@ -11,7 +11,7 @@ from utils.toolkit import logging_init, redis_init
 from crawling.crawler import Crawler
 
 logging_init()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('main')
 
 TOPIC_FIELD_TABLE = {
         'topic_id': {'hash_type': 'key'},

@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap/pagination.html' import render_pager, render_pagination %}
+
+{% block content %}
+    <h1>Messages</h1>
+    {% for message in messages %}
+        Message: {{ message.id }}<br>
+    {% endfor %}
+    <h1>render_pager</h1>
+    {{ render_pager(pagination) }}
+    <h1>render_pagination</h1>
+    {{ render_pagination(pagination) }}
+{% endblock %}
