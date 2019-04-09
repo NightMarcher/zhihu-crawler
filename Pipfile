@@ -14,6 +14,7 @@ pyyaml = "*"
 redis = "*"
 flask = "*"
 bootstrap-flask = "*"
+flask-apscheduler = "*"
 
 [requires]
 python_version = "3.6"

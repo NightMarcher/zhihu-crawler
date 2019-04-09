@@ -5,23 +5,26 @@ from __future__ import absolute_import
 from datetime import datetime, timedelta
 
 from flask import Flask
-from flask_bootstrap import Bootstrap
-from flask_sqlalchemy import SQLAlchemy
 from flask import request, session, render_template, url_for
+from flask_apscheduler import APScheduler
+from flask_bootstrap import Bootstrap
+# from flask_sqlalchemy import SQLAlchemy
 
 from utils.toolkit import logging_init
 
-logging_init()
 app = Flask(__name__)
+app.config.from_object('settings.flask_config.Basic')
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
 bootstrap = Bootstrap(app)
-db = SQLAlchemy(app)
-app.config['DEBUG'] = True
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=15)
+# db = SQLAlchemy(app)
+logging_init()
 logger = app.logger
 
 
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+# class Message(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
 
 
 @app.route('/')
@@ -29,7 +32,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/pagination', methods=['GET', 'POST'])
+# @app.route('/pagination', methods=['GET', 'POST'])
 def test_pagination():
     db.drop_all()
     db.create_all()
