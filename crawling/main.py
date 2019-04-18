@@ -1,4 +1,4 @@
-# main.py
+# crawling/main.py
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
@@ -6,33 +6,22 @@ import json, logging
 from hashlib import md5
 from multiprocessing.dummy import Pool as ThreadPool
 
+from crawling.crawler import Crawler
+from settings.constant import TOPIC_FIELD_TABLE
 from utils.mongo import Mongo
 from utils.toolkit import logging_init, redis_init
-from crawling.crawler import Crawler
 
 logging_init()
-logger = logging.getLogger('main')
-
-TOPIC_FIELD_TABLE = {
-        'topic_id': {'hash_type': 'key'},
-        'name': {'hash_type': 'to_hash'},
-        'follower_num': {'hash_type': 'to_hash'},
-        'question_num': {'hash_type': 'to_hash'},
-        'children_topic_ids': {'hash_type': 'to_hash'},
-        'parent_topic_ids': {'hash_type': 'to_hash'},
-        'hash_digest': {'hash_type': 'value'},
-        'last_updated': {'hash_type': None},
-        # '': {'hash_type': ''},
-        }
+logger = logging.getLogger(__name__)
 
 
 def sync_redis_with_mongo(redis, mongo):
     fields_ = [field for field, attr in TOPIC_FIELD_TABLE.items() if attr['hash_type'] is not None]
-    existsed_topics = [*mongo.find(col='topics', fields=fields_)]
-    if not existsed_topics:
+    existed_topics = [*mongo.find(col='topics', fields=fields_)]
+    if not existed_topics:
         logger.warning('No topic was founded in MongoDB!')
         return
-    redis.hmset('topics', {topic['topic_id']: topic['hash_digest'] for topic in existsed_topics})
+    redis.hmset('topics', {topic['topic_id']: topic['hash_digest'] for topic in existed_topics})
     logger.info('Redis sync with MongoDB succeed!')
 
 
@@ -96,7 +85,7 @@ def batch_process_topics_data(redis, mongo, crawler, topics, batch, thread_num):
     # update_redis_and_mongo_to_lasted(redis, mongo, need_update_topics_iter)
 
 
-def main():
+def crawl():
     redis = redis_init()
     mongo = Mongo()
     sync_redis_with_mongo(redis, mongo)
@@ -106,5 +95,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    crawl()
 

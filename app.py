@@ -1,4 +1,4 @@
-# main.py
+# app.py
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
@@ -32,7 +32,7 @@ def index():
     return render_template('index.html')
 
 
-# @app.route('/pagination', methods=['GET', 'POST'])
+@app.route('/pagination', methods=['GET', 'POST'])
 def test_pagination():
     db.drop_all()
     db.create_all()

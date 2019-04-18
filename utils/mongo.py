@@ -32,6 +32,10 @@ class Mongo:
         # TODO batch_size, limit, max_time_ms, sort
         return self._db[col].find(filters, fields, **kwargs)
 
+    def find_one(self, col, filters=None, fields=None, **kwargs):
+        # TODO max_time_ms
+        return self._db[col].find_one(filters, fields, **kwargs)
+
     def update_one(self, col, query, data, upsert=True):
         if not isinstance(data, dict):
             logger.warning(f'Following data is not instance of dict, MongoDB can not be updated!\n{data}')

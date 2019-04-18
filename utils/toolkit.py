@@ -4,10 +4,13 @@
 from __future__ import absolute_import
 import logging, os, time
 import logging.config
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 
 import requests, yaml
 from redis import ConnectionPool, Redis
+
+from settings.constant import LOCAL_TZ
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +79,10 @@ def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):
         elif rtype is 'HTML':
             response.encoding = 'UTF-8'
             return True, response.text
+
+
+def utc_2_local_datetime(utc_datetime):
+    return utc_datetime.replace(tzinfo=timezone.utc).astimezone(LOCAL_TZ)
 
 
 def timecost(func):

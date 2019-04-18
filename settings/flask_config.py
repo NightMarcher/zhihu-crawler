@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 
-from crawl import main as main_crawl
+from crawling.main import crawl
 
 
 class Basic:
@@ -14,14 +14,14 @@ class Basic:
     SCHEDULER_API_ENABLED = True
     JOBS = [
                 {
-                    'id': 'main_crawl',
-                    'func': main_crawl,
+                    'id': 'crawl',
+                    'func': crawl,
                     'args': '',
                     'trigger': {
                         'type': 'cron',
                         'day_of_week': '*',
                         'hour': '*',
-                        'minute': '24',
+                        'minute': '21',
                         'second': '0'
                         }
             },
