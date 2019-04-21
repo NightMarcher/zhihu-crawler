@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def sync_redis_with_mongo(redis, mongo):
-    fields_ = [field for field, attr in TOPIC_FIELD_TABLE.items() if attr['hash_type'] is not None]
-    existed_topics = [*mongo.find(col='topics', fields=fields_)]
+    to_hash_fields = [field for field, attr in TOPIC_FIELD_TABLE.items() if attr['hash_type'] is not None]
+    existed_topics = [*mongo.find(col='topics', fields=to_hash_fields)]
     if not existed_topics:
         logger.warning('No topic was founded in MongoDB!')
         return

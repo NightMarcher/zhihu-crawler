@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import
 import logging, os, time
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 
 from lxml import etree
 from selenium import webdriver
@@ -13,11 +13,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
+from settings.constant import CHROME_DRIVER_PATH, ZHIHU_URL
 from utils.toolkit import get_http_respense, timecost
 
 logger = logging.getLogger(__name__)
-CHROME_DRIVER_PATH = 'crawling/chromedriver'
-ZHIHU_URL = 'https://www.zhihu.com/'
 
 
 class Crawler:

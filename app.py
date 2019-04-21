@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from flask import Flask
 from flask import request, session, render_template, url_for

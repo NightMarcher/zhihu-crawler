@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-import logging, os, time
 import logging.config
-from datetime import datetime, timedelta, timezone
+import logging, os, time
+from datetime import timezone
 from functools import wraps
 
 import requests, yaml

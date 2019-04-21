@@ -15,6 +15,7 @@ redis = "*"
 flask = "*"
 bootstrap-flask = "*"
 flask-apscheduler = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.6"
