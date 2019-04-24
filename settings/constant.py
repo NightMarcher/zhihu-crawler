@@ -13,8 +13,10 @@ LOCAL_TZ = pytz.timezone('Asia/Shanghai')
 DATE_FORMAT = '%Y-%m-%d %a'
 TIME_FORMAT = '%I:%M:%S %p'
 
-DAILY_TOPIC_SHOT_NUM = 100
-TOPIC_SUMMARY_NUM = 25
+WEEKLY_TOPICS_ANALYZING_INTERVAL = 1
+MONTHLY_TOPICS_ANALYZING_INTERVAL = 2
+
+TOPIC_SUMMARY_NUM = 100
 
 TOPIC_FIELD_TABLE = {
         'topic_id': {'hash_type': 'key', 'analyze_type': 'key', },
