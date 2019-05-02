@@ -6,6 +6,7 @@ import logging.config
 import logging, os, time
 from datetime import timezone
 from functools import wraps
+from math import ceil
 
 import requests, yaml
 from redis import ConnectionPool, Redis
@@ -26,6 +27,8 @@ def logging_init():
             f.write('### ### ### Started ### ### ###\n')
     logging.config.dictConfig(logging_config)
 
+logging_init()
+
 
 def redis_init():
     with open('settings/redis.yaml', 'r') as f:
@@ -34,8 +37,9 @@ def redis_init():
         pool = ConnectionPool(host=redis_config['host'], port=redis_config['port'], db=redis_config['db'], decode_responses=True)
     except Exception as e:
         logger.exception('Redis Connecting Failed!')
-    redis = Redis(connection_pool=pool)
-    return redis
+    return Redis(connection_pool=pool)
+
+redis_cli = redis_init()
 
 
 class AttrDict(dict):
@@ -56,6 +60,37 @@ class AttrDict(dict):
             del self[name]
         else:
             raise AttributeError(f'Attribute "{attr}" does not exist.')
+
+
+class Pagination:
+    def __init__(self, seq, per_page, page=1):
+        self.seq = seq
+        self.per_page = per_page
+        self.page = page
+        self.total = len(seq)
+        self.pages = ceil(self.total / per_page)
+
+    def items(self):
+        return self.seq[self.per_page * (self.page - 1): self.per_page * self.page]
+
+    def iter_pages(self):
+        return range(1, self.pages + 1)
+
+    @property
+    def has_prev(self):
+        return False if self.page == 1 else True
+
+    @property
+    def prev_num(self):
+        return self.page - 1 if self.has_prev else 1
+
+    @property
+    def has_next(self):
+        return True if self.page < self.pages else False
+
+    @property
+    def next_num(self):
+        return self.page + 1 if self.has_next else self.pages
 
 
 def get_http_respense(url, method=None, rtype=None, timeout=5, **payload):

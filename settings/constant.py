@@ -17,6 +17,7 @@ WEEKLY_TOPICS_ANALYZING_INTERVAL = 1
 MONTHLY_TOPICS_ANALYZING_INTERVAL = 2
 
 TOPIC_SUMMARY_NUM = 100
+PER_PAGE = 1
 
 TOPIC_FIELD_TABLE = {
         'topic_id': {'hash_type': 'key', 'analyze_type': 'key', },

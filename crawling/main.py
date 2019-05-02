@@ -8,20 +8,19 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 from crawling.crawler import Crawler
 from settings.constant import TOPIC_FIELD_TABLE
-from utils.mongo import Mongo
-from utils.toolkit import logging_init, redis_init
+from utils.mongo import mongo
+from utils.toolkit import redis_cli
 
-logging_init()
 logger = logging.getLogger(__name__)
 
 
-def sync_redis_with_mongo(redis, mongo):
+def sync_redis_with_mongo(redis_cli):
     to_hash_fields = [field for field, attr in TOPIC_FIELD_TABLE.items() if attr['hash_type'] is not None]
     existed_topics = [*mongo.find(col='topics', fields=to_hash_fields)]
     if not existed_topics:
         logger.warning('No topic was founded in MongoDB!')
         return
-    redis.hmset('topics', {topic['topic_id']: topic['hash_digest'] for topic in existed_topics})
+    redis_cli.hmset('topics', {topic['topic_id']: topic['hash_digest'] for topic in existed_topics})
     logger.info('Redis sync with MongoDB succeed!')
 
 
@@ -53,12 +52,12 @@ def get_need_update_topics(topics_id_hash_dict, batch_topics):
     return [bt for bt in batch_topics if bt['hash_digest'] != topics_id_hash_dict.get(bt['topic_id'])]
 
 
-def update_redis_and_mongo_to_lasted(redis, mongo, need_update_topics):
+def update_redis_and_mongo_to_lasted(redis_cli, need_update_topics):
     if not need_update_topics:
         logger.warning('None of topics need to be updated')
         return
     for topic in need_update_topics:
-        redis.hset('topics', topic['topic_id'], topic['hash_digest'])
+        redis_cli.hset('topics', topic['topic_id'], topic['hash_digest'])
         mongo.update_one(
                 col='topics',
                 query={'topic_id': topic['topic_id']},
@@ -67,8 +66,8 @@ def update_redis_and_mongo_to_lasted(redis, mongo, need_update_topics):
         logger.debug(f'Topic {topic["name"]} (id={topic["topic_id"]}) was updated in redis and mongo to the lasted!')
 
 
-def batch_process_topics_data(redis, mongo, crawler, topics, batch, thread_num):
-    topics_id_hash_dict = redis.hgetall('topics')
+def batch_process_topics_data(redis_cli, crawler, topics, batch, thread_num):
+    topics_id_hash_dict = redis_cli.hgetall('topics')
     # Multi-thread crawling
     total = len(topics)
     for index in range(0, total, batch):
@@ -78,20 +77,18 @@ def batch_process_topics_data(redis, mongo, crawler, topics, batch, thread_num):
         pool.close()
         pool.join()
         need_update_topics = get_need_update_topics(topics_id_hash_dict, topics[index: index+batch])
-        update_redis_and_mongo_to_lasted(redis, mongo, need_update_topics)
+        update_redis_and_mongo_to_lasted(redis_cli, need_update_topics)
     # Ordinary crawling
     # [*map(crawler.get_topic_data, topics)]
-    # need_update_topics_iter = get_need_update_topics_iter(redis, topics)
-    # update_redis_and_mongo_to_lasted(redis, mongo, need_update_topics_iter)
+    # need_update_topics_iter = get_need_update_topics_iter(redis_cli, topics)
+    # update_redis_and_mongo_to_lasted(redis_cli, need_update_topics_iter)
 
 
 def crawl():
-    redis = redis_init()
-    mongo = Mongo()
-    sync_redis_with_mongo(redis, mongo)
+    sync_redis_with_mongo(redis_cli)
     crawler = Crawler()
     topics = get_all_topics(crawler, thread_num=4)
-    batch_process_topics_data(redis, mongo, crawler, topics, batch=50, thread_num=8)
+    batch_process_topics_data(redis_cli, crawler, topics, batch=50, thread_num=8)
 
 
 if __name__ == '__main__':

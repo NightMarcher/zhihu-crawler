@@ -47,3 +47,5 @@ class Mongo:
         elif cur.modified_count is 0:
             logger.error(f'Following query updated failed!\nquery={query}, matched_count={cur.matched_count}, modified_count={cur.modified_count}')
 
+mongo = Mongo()
+

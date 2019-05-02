@@ -3,7 +3,6 @@
 
 {% block title %}
 <h3>Night Marcher的知乎爬虫网站</h3>
-<img src={{ url_for('static', filename='img/avatar.jpg') }} alt="avatar" width=25 height=25 align=right>
 {% endblock %}
 
 <!-- {% block body_attribs %} -->
@@ -17,9 +16,8 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <div class="navbar-nav mr-auto">
-                {{ render_nav_item('test_pagination', '日话题统计及分析') }}
-                {{ render_nav_item('test_pagination', '周话题统计及分析') }}
-                {{ render_nav_item('test_pagination', '月话题统计及分析') }}
+                {{ render_nav_item('weekly_pagination', '周话题统计及分析', use_li=True) }}
+                {{ render_nav_item('monthly_pagination', '月话题统计及分析', use_li=True) }}
             </div>
         </div>
     </nav>

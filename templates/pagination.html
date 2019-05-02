@@ -2,12 +2,19 @@
 {% from 'bootstrap/pagination.html' import render_pager, render_pagination %}
 
 {% block content %}
-    <h1>Messages</h1>
-    {% for message in messages %}
-        Message: {{ message.id }}<br>
+<div>
+    <h1>{{ summary_type }}</h1>
+    {% for item in pagination.items() %}
+        {{ item }}<br>
     {% endfor %}
-    <h1>render_pager</h1>
     {{ render_pager(pagination) }}
-    <h1>render_pagination</h1>
+    <a href="{{ url_for('index') }}" title="Back to Home Page">返回主页</a>
     {{ render_pagination(pagination) }}
+</div>
+{% endblock %}
+
+{% block footer %}
+    <footer class="text-center">
+    <small> &copy; 2019 <a href="https://github.com/NightMarcher" title="Written by Bryan Lee">Bryan Lee</a></small>
+    </footer>
 {% endblock %}

@@ -9,21 +9,19 @@ from operator import itemgetter
 from pandas import DataFrame as DF
 
 from settings.constant import DATE_FORMAT, MONTHLY_TOPICS_ANALYZING_INTERVAL, TOPIC_FIELD_TABLE, TOPIC_SUMMARY_NUM, WEEKLY_TOPICS_ANALYZING_INTERVAL
-from utils.mongo import Mongo
-from utils.toolkit import logging_init, redis_init, utc_2_local_datetime
+from utils.mongo import mongo
+from utils.toolkit import redis_cli
 
-logging_init()
 logger = logging.getLogger(__name__)
 
 
 class Analyzer:
     def __init__(self):
-        self.mongo = Mongo()
         self.utcnow = datetime.utcnow()
 
     def take_daily_topics_snapshot(self):
         daily_analyze_fields = [field for field, attr in TOPIC_FIELD_TABLE.items() if attr['analyze_type'] is not None]
-        topics = [*self.mongo.find(col='topics', fields=daily_analyze_fields)]
+        topics = [*mongo.find(col='topics', fields=daily_analyze_fields)]
         question_num_summary = {t['name']: t['question_num'] for t in topics}
         follower_num_summary = {t['name']: t['follower_num'] for t in topics}
         topics_snapshot_id = self.utcnow.strftime('%Y%jD')
@@ -39,12 +37,12 @@ class Analyzer:
                     'follower_num_summary': follower_num_summary,
                     # '': ,
                 }
-        self.mongo.update_one(col='topics_snapshot', query={'topics_snapshot_id': topics_snapshot_id}, data=data)
+        mongo.update_one(col='topics_snapshot', query={'topics_snapshot_id': topics_snapshot_id}, data=data)
         logger.debug(f'topics_snapshot {topics_snapshot_id} was upserted!')
 
     def _topics_analyzing(self, analyze_scale, query_dict):
         analyze_fields = ['question_num_summary', 'follower_num_summary', 'summary_last_updated']
-        topic_summaries = [*self.mongo.find(col='topics_snapshot', query=query_dict, fields=analyze_fields)]
+        topic_summaries = [*mongo.find(col='topics_snapshot', query=query_dict, fields=analyze_fields)]
         # number of question
         question_num_df = DF.from_dict({ts['summary_last_updated'].strftime(DATE_FORMAT): ts['question_num_summary'] for ts in topic_summaries}).dropna()
         question_num_df['var'] = question_num_df.var(axis='columns')
@@ -77,7 +75,7 @@ class Analyzer:
                     'topic_follower_question_dict': df2dict_func(topic_follower_question_df[:TOPIC_SUMMARY_NUM], 'ratio'),
                     # '': ,
                 }
-        self.mongo.update_one(col=analyze_scale+'_topics_summary', query={summary_url_field: summary_url_str}, data=data)
+        mongo.update_one(col=analyze_scale+'_topics_summary', query={summary_url_field: summary_url_str}, data=data)
         logger.debug(f'{analyze_scale}_topics_summary {summary_url_str} was upserted!')
 
     def analyze_weekly_topics(self):
@@ -102,9 +100,9 @@ class Analyzer:
                 }
         self._topics_analyzing('monthly', query_dict)
 
+analyzer = Analyzer()
 
 if __name__ == '__main__':
-    analyzer = Analyzer()
     analyzer.take_daily_topics_snapshot()
     analyzer.analyze_weekly_topics()
     analyzer.analyze_monthly_topics()
