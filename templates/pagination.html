@@ -1,16 +1,20 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap/pagination.html' import render_pager, render_pagination %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mystyle.css') }}">
+{% endblock %}
+
 {% block content %}
-<div>
-    <h1>{{ summary_type }}</h1>
-    {% for item in pagination.items() %}
-        {{ item }}<br>
+<main class="main">
+    <h1>{{ pagination_title }}</h1>
+    {% for item in pagination.get_items() %}
+        <a href="{{ url_for('summary', sub_url='?' + item['summary_sub_url']) }}">{{ item['summary_title'] }}</a><br>
     {% endfor %}
     {{ render_pager(pagination) }}
     <a href="{{ url_for('index') }}" title="Back to Home Page">返回主页</a>
     {{ render_pagination(pagination) }}
-</div>
+</main>
 {% endblock %}
 
 {% block footer %}

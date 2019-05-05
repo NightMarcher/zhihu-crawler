@@ -10,7 +10,7 @@ from flask_apscheduler import APScheduler
 from flask_bootstrap import Bootstrap
 import pymongo
 
-from settings.constant import PER_PAGE
+from settings.constant import PER_PAGE, SUMMARY_ATTR_DICT
 from utils.mongo import mongo
 from utils.toolkit import Pagination, redis_cli
 
@@ -28,30 +28,23 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/weekly_pagination/', methods=['GET', 'POST'])
-def weekly_pagination():
-    weekly_topics_summary = [*mongo.find(col='weekly_topics_summary').sort('summary_last_updated', pymongo.DESCENDING)]
-    messages = [f"{wts['summary_last_updated'].strftime('%Y年第%W周')} 话题总结" for wts in weekly_topics_summary]
-    page = request.args.get('page', 1)
-    try:
-        page = int(page)
-    except Exception as e:
-        page = 1
-    pagination = Pagination(messages, per_page=PER_PAGE, page=page)
-    return render_template('pagination.html', pagination=pagination, summary_type='周话题总结')
+@app.route('/pagination/', methods=['GET', 'POST'])
+def pagination():
+    sub = request.args.get('sub')
+    topics_summary = [*mongo.find(col=sub+'_topics_summary', fields=['summary_last_updated', 'summary_sub_url']).sort('summary_last_updated', pymongo.DESCENDING)]
+    summary_dicts = [{
+        'summary_title': ts['summary_last_updated'].strftime(SUMMARY_ATTR_DICT[sub]['summary_title_fmt']) + '话题总结',
+        'summary_sub_url': ts['summary_sub_url'],
+        } for ts in topics_summary
+    ]
+    page = request.args.get('page', 1, int)
+    pagination = Pagination(summary_dicts, per_page=PER_PAGE, page=page)
+    return render_template('pagination.html', pagination=pagination, pagination_title=SUMMARY_ATTR_DICT[sub]['key_word']+'话题总结')
 
 
-@app.route('/monthly_pagination/', methods=['GET', 'POST'])
-def monthly_pagination():
-    monthly_topics_summary = [*mongo.find(col='monthly_topics_summary').sort('summary_last_updated', pymongo.DESCENDING)]
-    messages = [f"{mts['summary_last_updated'].strftime('%Y年第%m月')} 话题总结" for mts in monthly_topics_summary]
-    page = request.args.get('page', 1)
-    try:
-        page = int(page)
-    except Exception as e:
-        page = 1
-    pagination = Pagination(messages, per_page=PER_PAGE, page=page)
-    return render_template('pagination.html', pagination=pagination, summary_type='月话题总结')
+@app.route('/summary/<sub_url>', methods=['GET', 'POST'])
+def summary(sub_url):
+    pass
 
 
 if __name__ == '__main__':

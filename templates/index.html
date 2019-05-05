@@ -2,7 +2,11 @@
 {% from 'bootstrap/nav.html' import render_nav_item %}
 
 {% block title %}
-<h3>Night Marcher的知乎爬虫网站</h3>
+<center><h3>Night Marcher的知乎爬虫网站</h3></center>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mystyle.css') }}">
 {% endblock %}
 
 <!-- {% block body_attribs %} -->
@@ -10,14 +14,15 @@
 <!-- {% endblock body_attribs %} -->
 
 {% block content %}
+<main class="main">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <div class="navbar-nav mr-auto">
-                {{ render_nav_item('weekly_pagination', '周话题统计及分析', use_li=True) }}
-                {{ render_nav_item('monthly_pagination', '月话题统计及分析', use_li=True) }}
+                {{ render_nav_item('pagination', '周话题统计及分析', sub='weekly', page=None, use_li=True) }}
+                {{ render_nav_item('pagination', '月话题统计及分析', sub='monthly', page=None, use_li=True) }}
             </div>
         </div>
     </nav>
@@ -25,6 +30,7 @@
     <div>
     <img src={{ url_for('static', filename='img/background.jpg') }} alt="background" width=100% height=100%>
     </div>
+</main>
 {% endblock %}
 
 {% block footer %}

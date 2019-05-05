@@ -37,7 +37,7 @@ def get_all_topics(crawler, thread_num):
     for ht in home_topics:
         topics = crawler.get_topics_by_home_topic(ht) or []
         all_topics.extend(topics)
-        break # for debug
+        # break # for debug
     logger.info(f'{len(all_topics)} topics were founded in total.')
     return all_topics
 

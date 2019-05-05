@@ -16,7 +16,6 @@ TIME_FORMAT = '%I:%M:%S %p'
 WEEKLY_TOPICS_ANALYZING_INTERVAL = 1
 MONTHLY_TOPICS_ANALYZING_INTERVAL = 2
 
-TOPIC_SUMMARY_NUM = 100
 PER_PAGE = 1
 
 TOPIC_FIELD_TABLE = {
@@ -30,4 +29,9 @@ TOPIC_FIELD_TABLE = {
         'last_upserted': {'hash_type': None, 'analyze_type': None, },
         # '': {'hash_type': '', 'analyze_type': '', },
         }
+
+SUMMARY_ATTR_DICT = {
+    'weekly': {'key_word': '周', 'summary_title_fmt': '%Y年第%W周'},
+    'monthly': {'key_word': '月', 'summary_title_fmt': '%Y年第%m月'},
+    }
 

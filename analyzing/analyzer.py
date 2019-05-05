@@ -8,7 +8,7 @@ from operator import itemgetter
 
 from pandas import DataFrame as DF
 
-from settings.constant import DATE_FORMAT, MONTHLY_TOPICS_ANALYZING_INTERVAL, TOPIC_FIELD_TABLE, TOPIC_SUMMARY_NUM, WEEKLY_TOPICS_ANALYZING_INTERVAL
+from settings.constant import DATE_FORMAT, MONTHLY_TOPICS_ANALYZING_INTERVAL, TOPIC_FIELD_TABLE, WEEKLY_TOPICS_ANALYZING_INTERVAL
 from utils.mongo import mongo
 from utils.toolkit import redis_cli
 
@@ -61,22 +61,22 @@ class Analyzer:
         topic_follower_question_df['ratio'] = topic_follower_question_df['follower_num_summary'] / topic_follower_question_df['question_num_summary']
         topic_follower_question_df.sort_values(by='ratio', ascending=False, inplace=True)
         logger.debug(topic_follower_question_df)
-        # summary url
-        summary_url_field = analyze_scale + '_summary_url'
-        summary_url_str = '&'.join(f'{tp[0]}={tp[1]}' for tp in sorted(query_dict.items(), key=itemgetter(0)))
+        # update to mongo
+        summary_sub_url = '&'.join(f'{tp[0]}={tp[1]}' for tp in sorted(query_dict.items(), key=itemgetter(0)))
         def df2dict_func(df, drop_column):
             df.drop(columns=drop_column, inplace=True)
             return df.to_dict(orient='index')
         data = {
-                    summary_url_field: summary_url_str,
+                    'summary_sub_url': summary_sub_url,
                     'summary_last_updated': self.utcnow,
-                    'question_num_dict': df2dict_func(question_num_df[:TOPIC_SUMMARY_NUM], 'var'),
-                    'follower_num_dict': df2dict_func(follower_num_df[:TOPIC_SUMMARY_NUM], 'var'),
-                    'topic_follower_question_dict': df2dict_func(topic_follower_question_df[:TOPIC_SUMMARY_NUM], 'ratio'),
+                    'question_num_dict': df2dict_func(question_num_df, 'var'),
+                    'follower_num_dict': df2dict_func(follower_num_df, 'var'),
+                    'topic_follower_question_dict': df2dict_func(topic_follower_question_df, 'ratio'),
                     # '': ,
                 }
-        mongo.update_one(col=analyze_scale+'_topics_summary', query={summary_url_field: summary_url_str}, data=data)
-        logger.debug(f'{analyze_scale}_topics_summary {summary_url_str} was upserted!')
+        data.update(query_dict)
+        mongo.update_one(col=analyze_scale+'_topics_summary', query={'summary_sub_url': summary_sub_url}, data=data)
+        logger.debug(f'{analyze_scale}_topics_summary {summary_sub_url} was upserted!')
 
     def analyze_weekly_topics(self):
         year, week, weekday =  self.utcnow.strftime('%Y %W %w').split()
@@ -85,7 +85,6 @@ class Analyzer:
         query_dict = {
                 'year': year,
                 'week': week,
-                'weekday': weekday,
                 }
         self._topics_analyzing('weekly', query_dict)
 
@@ -96,14 +95,18 @@ class Analyzer:
         query_dict = {
                 'year': year,
                 'month': month,
-                'monthday': monthday,
                 }
         self._topics_analyzing('monthly', query_dict)
 
 analyzer = Analyzer()
 
-if __name__ == '__main__':
+
+def analyze():
     analyzer.take_daily_topics_snapshot()
     analyzer.analyze_weekly_topics()
     analyzer.analyze_monthly_topics()
+
+
+if __name__ == '__main__':
+    analyze()
 

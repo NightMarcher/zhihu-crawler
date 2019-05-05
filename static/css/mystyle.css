@@ -1,0 +1,15 @@
+
+.main{
+    text-align: center;
+    background-color: #D8D8D8;
+    border-radius: 5px;
+    width: 95%;
+    height: 95%;
+    margin: auto;
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+

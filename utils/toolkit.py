@@ -70,7 +70,7 @@ class Pagination:
         self.total = len(seq)
         self.pages = ceil(self.total / per_page)
 
-    def items(self):
+    def get_items(self):
         return self.seq[self.per_page * (self.page - 1): self.per_page * self.page]
 
     def iter_pages(self):
