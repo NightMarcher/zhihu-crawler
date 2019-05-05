@@ -25,14 +25,16 @@ json，通用序列化方案
 MD5，选择原因见[Hashing Algorithms In Python](http://widerin.net/blog/hashing-algorithms-in-python/)。此外经测试，base16速度仅次于MD5，base64次于base16，base32最慢；整体而言，直接加密'汉字'类型的字符串，比加密'\\u6c49\\u5b57'类型的字符串速度要快，因此json.dumps的时候ensure_ascii参数要设置为False
 - [x] **数据持久化**
 MongoDB，时间类型数据统一存储为格林尼治时间
-- [ ] **定时任务**
+- [x] **定时任务**
 Flask-APScheduler，使用简单，轻量级方案，且支持多种数据库的持久化
 - [ ] **任务管理**
-supervisor方便易用
+Supervisor方便易用
 - [x] **并发实现**
 multiprocessing.dummy多线程，易于移植，方法简单
 - [ ] **话题树建立**
-- [ ] **网页展示**
-flask框架 + Bootstrap-Flask
+- [x] **网页展示**
+Flask框架 + Bootstrap-Flask
 - [ ] **数据处理及可视化**
 pyecharts + worldcloud + jieba
+- [ ] **获取访问页面的用户IP，并分析其所在区域**
+- [ ] **统计访问每一个页面的用户数量**
