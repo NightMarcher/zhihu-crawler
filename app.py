@@ -28,23 +28,30 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/pagination/', methods=['GET', 'POST'])
-def pagination():
-    sub = request.args.get('sub')
-    topics_summary = [*mongo.find(col=sub+'_topics_summary', fields=['summary_last_updated', 'summary_sub_url']).sort('summary_last_updated', pymongo.DESCENDING)]
+@app.route('/summary_pagination/', methods=['GET', 'POST'])
+def summary_pagination():
+    summary_type = request.args.get('summary_type')
+    search_params = SUMMARY_ATTR_DICT[summary_type]['search_params']
+    topic_summaries = [*mongo.find(col=summary_type + '_topics_summary', fields=search_params + ['summary_last_updated']).sort('summary_last_updated', pymongo.DESCENDING)]
     summary_dicts = [{
-        'summary_title': ts['summary_last_updated'].strftime(SUMMARY_ATTR_DICT[sub]['summary_title_fmt']) + '话题总结',
-        'summary_sub_url': ts['summary_sub_url'],
-        } for ts in topics_summary
+        'summary_title': ts['summary_last_updated'].strftime(SUMMARY_ATTR_DICT[summary_type]['summary_title_fmt']) + '话题总结',
+        search_params[0]: ts[search_params[0]],
+        search_params[1]: ts[search_params[1]],
+        } for ts in topic_summaries
     ]
     page = request.args.get('page', 1, int)
     pagination = Pagination(summary_dicts, per_page=PER_PAGE, page=page)
-    return render_template('pagination.html', pagination=pagination, pagination_title=SUMMARY_ATTR_DICT[sub]['key_word']+'话题总结')
+    return render_template('pagination.html', summary_pagination=pagination, summary_type=summary_type, summary_pagination_title=SUMMARY_ATTR_DICT[summary_type]['key_word']+'话题总结')
 
 
-@app.route('/summary/<sub_url>', methods=['GET', 'POST'])
-def summary(sub_url):
-    pass
+@app.route('/summary/', methods=['GET', 'POST'])
+def summary():
+    summary_type = request.args['summary_type']
+    query_dict = {sp: request.args[sp] for sp in SUMMARY_ATTR_DICT[summary_type]['search_params']}
+    topic_summary_dict = mongo.find_one(col=summary_type + '_topics_summary', query=query_dict)
+    logger.debug(f'### {topic_summary_dict}')
+    summary_title = summary_type
+    return render_template('summary.html', summary_type=summary_type, summary_title=summary_title)
 
 
 if __name__ == '__main__':

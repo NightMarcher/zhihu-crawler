@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mystyle.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="main">
+    <h1>{{ summary_title }}</h1>
+        <br>
+        <a href="{{ url_for('summary_pagination', summary_type=summary_type) }}" title="Back to Summarys Page">返回话题总结列表</a>
+        &nbsp;
+        <a href="{{ url_for('index') }}" title="Back to Home Page">返回主页</a>
+</main>
+{% endblock %}
+
+{% block footer %}
+    <footer class="text-center">
+    <small> &copy; 2019 <a href="https://github.com/NightMarcher" title="Written by Bryan Lee">Bryan Lee</a></small>
+    </footer>
+{% endblock %}
+

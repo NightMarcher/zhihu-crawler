@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'bootstrap/pagination.html' import render_pager, render_pagination %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/mystyle.css') }}">
@@ -7,13 +7,23 @@
 
 {% block content %}
 <main class="main">
-    <h1>{{ pagination_title }}</h1>
-    {% for item in pagination.get_items() %}
-        <a href="{{ url_for('summary', sub_url='?' + item['summary_sub_url']) }}">{{ item['summary_title'] }}</a><br>
+    <h1>{{ summary_pagination_title }}</h1>
+    {% for item in summary_pagination.get_items() %}
+        {% if summary_type == 'weekly' %}
+            <a href="{{ url_for('summary', summary_type=summary_type, year=item['year'], week=item['week']) }}">{{ item['summary_title'] }}</a>
+            <br>
+        {% elif summary_type == 'monthly' %}
+            <a href="{{ url_for('summary', summary_type=summary_type, year=item['year'], month=item['month']) }}">{{ item['summary_title'] }}</a>
+            <br>
+        {% else %}
+            Wrong summary_type Param
+            <br>
+        {% endif %}
     {% endfor %}
-    {{ render_pager(pagination) }}
+    <br>
     <a href="{{ url_for('index') }}" title="Back to Home Page">返回主页</a>
-    {{ render_pagination(pagination) }}
+    <br>
+    {{ render_pagination(summary_pagination) }}
 </main>
 {% endblock %}
 
@@ -22,3 +32,4 @@
     <small> &copy; 2019 <a href="https://github.com/NightMarcher" title="Written by Bryan Lee">Bryan Lee</a></small>
     </footer>
 {% endblock %}
+

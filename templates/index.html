@@ -21,8 +21,8 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <div class="navbar-nav mr-auto">
-                {{ render_nav_item('pagination', '周话题统计及分析', sub='weekly', page=None, use_li=True) }}
-                {{ render_nav_item('pagination', '月话题统计及分析', sub='monthly', page=None, use_li=True) }}
+                {{ render_nav_item('summary_pagination', '周话题统计及分析', summary_type='weekly', page=None, use_li=True) }}
+                {{ render_nav_item('summary_pagination', '月话题统计及分析', summary_type='monthly', page=None, use_li=True) }}
             </div>
         </div>
     </nav>

@@ -40,7 +40,7 @@ class Analyzer:
         mongo.update_one(col='topics_snapshot', query={'topics_snapshot_id': topics_snapshot_id}, data=data)
         logger.debug(f'topics_snapshot {topics_snapshot_id} was upserted!')
 
-    def _topics_analyzing(self, analyze_scale, query_dict):
+    def _topics_analyzing(self, summary_type, query_dict):
         analyze_fields = ['question_num_summary', 'follower_num_summary', 'summary_last_updated']
         topic_summaries = [*mongo.find(col='topics_snapshot', query=query_dict, fields=analyze_fields)]
         # number of question
@@ -62,12 +62,10 @@ class Analyzer:
         topic_follower_question_df.sort_values(by='ratio', ascending=False, inplace=True)
         logger.debug(topic_follower_question_df)
         # update to mongo
-        summary_sub_url = '&'.join(f'{tp[0]}={tp[1]}' for tp in sorted(query_dict.items(), key=itemgetter(0)))
         def df2dict_func(df, drop_column):
             df.drop(columns=drop_column, inplace=True)
             return df.to_dict(orient='index')
         data = {
-                    'summary_sub_url': summary_sub_url,
                     'summary_last_updated': self.utcnow,
                     'question_num_dict': df2dict_func(question_num_df, 'var'),
                     'follower_num_dict': df2dict_func(follower_num_df, 'var'),
@@ -75,8 +73,8 @@ class Analyzer:
                     # '': ,
                 }
         data.update(query_dict)
-        mongo.update_one(col=analyze_scale+'_topics_summary', query={'summary_sub_url': summary_sub_url}, data=data)
-        logger.debug(f'{analyze_scale}_topics_summary {summary_sub_url} was upserted!')
+        mongo.update_one(col=summary_type + '_topics_summary', query=query_dict, data=data)
+        logger.debug(f'{summary_type}_topics_summary {query_dict} was upserted!')
 
     def analyze_weekly_topics(self):
         year, week, weekday =  self.utcnow.strftime('%Y %W %w').split()
