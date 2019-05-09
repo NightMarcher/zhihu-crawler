@@ -16,6 +16,7 @@ flask = "*"
 bootstrap-flask = "*"
 flask-apscheduler = "*"
 pandas = "*"
+pyecharts = "*"
 
 [requires]
 python_version = "3.6"

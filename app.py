@@ -8,6 +8,8 @@ from flask import Blueprint, Flask
 from flask import request, session, render_template, url_for
 from flask_apscheduler import APScheduler
 from flask_bootstrap import Bootstrap
+from pyecharts.charts import Bar, Page
+from pyecharts import options as opts
 import pymongo
 
 from settings.constant import PER_PAGE, SUMMARY_ATTR_DICT
@@ -49,9 +51,19 @@ def summary():
     summary_type = request.args['summary_type']
     query_dict = {sp: request.args[sp] for sp in SUMMARY_ATTR_DICT[summary_type]['search_params']}
     topic_summary_dict = mongo.find_one(col=summary_type + '_topics_summary', query=query_dict)
-    logger.debug(f'### {topic_summary_dict}')
+    # logger.debug(f'### {topic_summary_dict}')
     summary_title = summary_type
-    return render_template('summary.html', summary_type=summary_type, summary_title=summary_title)
+    attr2 = ["New", "Pending", "Verified", "Fix", "Success"]
+    v1 = [5, 20, 36, 10, 75]
+    page = Page()
+    page = (
+            Bar()
+            .add_xaxis(attr2)
+            .add_yaxis('Shop A', v1, category_gap=0)
+            .set_global_opts(title_opts=opts.TitleOpts(title="Bar-直方图"))
+    )
+    REMOTE_HOST = "https://pyecharts.github.io/assets/js"
+    return render_template('summary.html', summary_type=summary_type, host=REMOTE_HOST, script_list=[page.load_javascript()], summary_title=summary_title, chart=page.render_embed())
 
 
 if __name__ == '__main__':
