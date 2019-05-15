@@ -46,12 +46,10 @@ class Analyzer:
         # number of question
         question_num_df = DF.from_dict({ts['summary_last_updated'].strftime(DATE_FORMAT): ts['question_num_summary'] for ts in topic_summaries}).dropna()
         question_num_df['var'] = question_num_df.var(axis='columns')
-        question_num_df.sort_values(by='var', ascending=False, inplace=True)
         logger.debug(question_num_df)
         # number of follower 
         follower_num_df = DF.from_dict({ts['summary_last_updated'].strftime(DATE_FORMAT): ts['follower_num_summary'] for ts in topic_summaries}).dropna()
         follower_num_df['var'] = follower_num_df.var(axis='columns')
-        follower_num_df.sort_values(by='var', ascending=False, inplace=True)
         logger.debug(follower_num_df)
         # ratio of follower num to question num
         topic_summaries.sort(key=itemgetter('summary_last_updated'))
@@ -59,17 +57,13 @@ class Analyzer:
         topic_summaries[-1].pop('summary_last_updated')
         topic_follower_question_df = DF.from_dict(topic_summaries[-1])
         topic_follower_question_df['ratio'] = topic_follower_question_df['follower_num_summary'] / topic_follower_question_df['question_num_summary']
-        topic_follower_question_df.sort_values(by='ratio', ascending=False, inplace=True)
         logger.debug(topic_follower_question_df)
-        # update to mongo
-        def df2dict_func(df, drop_column):
-            df.drop(columns=drop_column, inplace=True)
-            return df.to_dict(orient='index')
+            
         data = {
                     'summary_last_updated': self.utcnow,
-                    'question_num_dict': df2dict_func(question_num_df, 'var'),
-                    'follower_num_dict': df2dict_func(follower_num_df, 'var'),
-                    'topic_follower_question_dict': df2dict_func(topic_follower_question_df, 'ratio'),
+                    'question_num_dict': question_num_df.to_dict(),
+                    'follower_num_dict': follower_num_df.to_dict(),
+                    'topic_follower_question_dict': topic_follower_question_df.to_dict(),
                     # '': ,
                 }
         data.update(query_dict)

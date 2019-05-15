@@ -22,14 +22,14 @@ class Basic:
                 {
                     'id': 'crawl_and_analyze',
                     'func': analyze,
-                    # 'func': do_jobs_in_sequence,
-                    # 'args': (crawl, analyze),
+                    'func': do_jobs_in_sequence,
+                    'args': (crawl, analyze),
                     'trigger': {
                         'type': 'cron',
                         'day_of_week': '*',
-                        'hour': '*',
-                        'minute': '0,30',
-                        # 'hour': '*/4',
+                        # 'hour': '*',
+                        'minute': '12',
+                        'hour': '*/2',
                         # 'minute': '30',
                         'second': '0'
                         }
