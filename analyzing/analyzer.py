@@ -58,7 +58,6 @@ class Analyzer:
         topic_follower_question_df = DF.from_dict(topic_summaries[-1])
         topic_follower_question_df['ratio'] = topic_follower_question_df['follower_num_summary'] / topic_follower_question_df['question_num_summary']
         logger.debug(topic_follower_question_df)
-            
         data = {
                     'summary_last_updated': self.utcnow,
                     'question_num_dict': question_num_df.to_dict(),

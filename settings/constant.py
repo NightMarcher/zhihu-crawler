@@ -4,6 +4,9 @@
 from __future__ import absolute_import
 import pytz
 
+from pyecharts import options as opts
+from pyecharts.globals import ThemeType
+
 
 CHROME_DRIVER_PATH = 'crawling/chromedriver'
 ZHIHU_URL = 'https://www.zhihu.com/'
@@ -18,6 +21,10 @@ MONTHLY_TOPICS_ANALYZING_INTERVAL = 2
 
 DISPLAY_TOPIC_NUM = 15
 PER_PAGE = 10
+REMOTE_HOST = "https://pyecharts.github.io/assets/js"
+INIT_OPTS = opts.InitOpts(
+                    theme=ThemeType.SHINE,
+                    )
 
 TOPIC_FIELD_TABLE = {
         'topic_id': {'hash_type': 'key', 'analyze_type': 'key', },

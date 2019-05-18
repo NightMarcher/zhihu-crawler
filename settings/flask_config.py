@@ -27,10 +27,8 @@ class Basic:
                     'trigger': {
                         'type': 'cron',
                         'day_of_week': '*',
-                        # 'hour': '*',
-                        'minute': '12',
                         'hour': '*/2',
-                        # 'minute': '30',
+                        'minute': '30',
                         'second': '0'
                         }
             },

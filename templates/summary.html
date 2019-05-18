@@ -1,8 +1,8 @@
 {% extends 'layout.html' %}
 
 {% block script %}
-{% for jsfile_name in script_list %}
-<script src="{{ host }}/{{ jsfile_name }}.js"></script>
+{% for jsfile in scripts %}
+<script src="{{ host }}/{{ jsfile }}.js"></script>
 {% endfor %}
 {% endblock %}
 
@@ -14,8 +14,9 @@
 <main class="main">
     <h1>{{ summary_title }}</h1>
         <div>
-            <h2>Echarts</h2>
-            {{ chart|safe }}
+            {% for chart in charts %}
+            {{ chart.render_embed()|safe }}
+            {% endfor %}
         </div>
         <br>
         <a href="{{ url_for('summary_pagination', summary_type=summary_type) }}" title="Back to Summarys Page">返回话题总结列表</a>

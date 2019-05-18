@@ -9,12 +9,11 @@ from flask import Blueprint, Flask
 from flask import request, session, render_template, url_for
 from flask_apscheduler import APScheduler
 from flask_bootstrap import Bootstrap
-from pyecharts.charts import Line, Page, Scatter
-from pyecharts.globals import ThemeType
+from pyecharts.charts import Bar, Line, Scatter
 from pyecharts import options as opts
 import pymongo
 
-from settings.constant import DISPLAY_TOPIC_NUM, PER_PAGE, SUMMARY_ATTR_DICT
+from settings.constant import DISPLAY_TOPIC_NUM, INIT_OPTS, PER_PAGE, REMOTE_HOST, SUMMARY_ATTR_DICT
 from utils.mongo import mongo
 from utils.toolkit import Pagination, redis_cli
 
@@ -48,43 +47,88 @@ def summary_pagination():
     return render_template('pagination.html', summary_pagination=pagination, summary_type=summary_type, summary_pagination_title=SUMMARY_ATTR_DICT[summary_type]['key_word']+'话题总结')
 
 
-def render_lines(df, title, drop_column):
-    df.sort_values(by=drop_column, ascending=False, inplace=True)
-    df.drop(columns=drop_column, inplace=True)
-    xlabels = [*df.columns]
-    init_opts = opts.InitOpts(
-                        theme=ThemeType.SHINE,
-                        )
-    global_opts = {
+def render_line(df, title, sort_by):
+    df.sort_values(by=sort_by, ascending=False, inplace=True)
+    df.drop(columns=sort_by, inplace=True)
+    df = df.diff(axis='columns').fillna(0)
+    line_global_opts = {
             'title_opts': opts.TitleOpts(title=title),
             'tooltip_opts': opts.TooltipOpts(trigger='axis'),
             'legend_opts': opts.LegendOpts(type_='scroll', orient='vertical', pos_right='0%', pos_top='5%'),
             'toolbox_opts': opts.ToolboxOpts(is_show=True),
-            # 'datazoom_opts': opts.DataZoomOpts(is_show=True),
-            'yaxis_opts': opts.AxisOpts(is_scale=True, min_='dataMin', max_='dataMax'),
+            'yaxis_opts': opts.AxisOpts(min_='dataMin', max_='dataMax'),
             }
-    l = Line(init_opts).add_xaxis(xlabels).set_global_opts(**global_opts)
+    line = Line(INIT_OPTS).set_global_opts(**line_global_opts).add_xaxis([*df.columns])
     index = 0
+    topics = []
     for nt in df.itertuples():
         if index == DISPLAY_TOPIC_NUM:
             break
-        l = l.add_yaxis(nt[0], y_axis=tuple(nt[1:]))
+        line = line.add_yaxis(nt[0], y_axis=[*nt[1:]], is_smooth=True)
+        topics.append(nt[0])
         index += 1
-    return l
+    return line, topics
+
+
+def render_bar(sr, title):
+    bar_global_opts = {
+            'title_opts': opts.TitleOpts(title=title),
+            'tooltip_opts': opts.TooltipOpts(),
+            'legend_opts': opts.LegendOpts(is_show=False),
+            'toolbox_opts': opts.ToolboxOpts(is_show=True),
+            'xaxis_opts': opts.AxisOpts(type_='category'),
+            'yaxis_opts': opts.AxisOpts(min_='dataMin', max_='dataMax'),
+            }
+    return (
+            Bar(INIT_OPTS)
+            .set_global_opts(**bar_global_opts)
+            .add_xaxis([*sr.index])
+            .add_yaxis(series_name='', yaxis_data=sr.tolist())
+            .reversal_axis()
+            .set_series_opts(label_opts=opts.LabelOpts(position='right'))
+        )
+
+
+def render_scatter(df, title):
+    scatter_global_opts = {
+            'title_opts': opts.TitleOpts(title=title),
+            'tooltip_opts': opts.TooltipOpts(),
+            'legend_opts': opts.LegendOpts(is_show=False),
+            'toolbox_opts': opts.ToolboxOpts(is_show=True),
+            'xaxis_opts': opts.AxisOpts(name='问题数', min_='dataMin', max_='dataMax'),
+            'yaxis_opts': opts.AxisOpts(name='关注人数', min_='dataMin', max_='dataMax'),
+            }
+    return (
+            Scatter(INIT_OPTS)
+            .set_global_opts(**scatter_global_opts)
+            .add_xaxis()
+            .add_yaxis()
+        )
+
 
 @app.route('/summary/', methods=['GET', 'POST'])
 def summary():
     summary_type = request.args['summary_type']
     query_dict = {sp: request.args[sp] for sp in SUMMARY_ATTR_DICT[summary_type]['search_params']}
     topic_summary_dict = mongo.find_one(col=summary_type + '_topics_summary', query=query_dict)
-    df = DF.from_dict(topic_summary_dict['follower_num_dict'])
-    # logger.debug(f'### {topic_summary_dict}')
-    summary_title = summary_type
-    pages = (
-            render_lines(df, 'follower_num_dict', 'var')
-        )
-    REMOTE_HOST = "https://pyecharts.github.io/assets/js"
-    return render_template('summary.html', summary_type=summary_type, host=REMOTE_HOST, script_list=[pages.load_javascript()], summary_title=summary_title, chart=pages.render_embed())
+    summary_title = topic_summary_dict['summary_last_updated'].strftime(SUMMARY_ATTR_DICT[summary_type]['summary_title_fmt']) + '话题总结'
+    # topic question display
+    question_num_df = DF.from_dict(topic_summary_dict['question_num_dict'])
+    question_line, topics = render_line(question_num_df, title='话题问题数变化', sort_by='var')
+    last_day_question_sr = question_num_df.iloc[:, -1].loc[topics]
+    question_bar = render_bar(last_day_question_sr, title=f'话题问题数({last_day_question_sr.name})')
+    # topic follower display
+    follower_num_df = DF.from_dict(topic_summary_dict['follower_num_dict'])
+    follower_line, topics = render_line(follower_num_df, title='话题关注人数变化', sort_by='var')
+    last_day_follower_sr = follower_num_df.iloc[:, -1].loc[topics]
+    follower_bar = render_bar(last_day_follower_sr, title=f'话题关注人数({last_day_follower_sr.name})')
+    # topic question/follower display
+    topic_follower_question_df = DF.from_dict(topic_summary_dict['topic_follower_question_dict'])
+    charts = [question_line, follower_line, question_bar, follower_bar]
+    # scatter = render_scatter(topic_follower_question_df, title='话题总览')
+    # charts = [question_line, follower_line, question_bar, follower_bar, scatter]
+    scripts = [c.load_javascript() for c in charts]
+    return render_template('summary.html', summary_type=summary_type, summary_title=summary_title, host=REMOTE_HOST, scripts=scripts, charts=charts)
 
 
 if __name__ == '__main__':
