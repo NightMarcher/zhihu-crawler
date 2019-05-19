@@ -52,11 +52,12 @@ def render_line(df, title, sort_by):
     df.drop(columns=sort_by, inplace=True)
     df = df.diff(axis='columns').fillna(0)
     line_global_opts = {
-            'title_opts': opts.TitleOpts(title=title),
-            'tooltip_opts': opts.TooltipOpts(trigger='axis'),
             'legend_opts': opts.LegendOpts(type_='scroll', orient='vertical', pos_right='0%', pos_top='5%'),
-            'toolbox_opts': opts.ToolboxOpts(is_show=True),
-            'yaxis_opts': opts.AxisOpts(min_='dataMin', max_='dataMax'),
+            'title_opts': opts.TitleOpts(title=title),
+            'toolbox_opts': opts.ToolboxOpts(),
+            'tooltip_opts': opts.TooltipOpts(trigger='axis'),
+            'xaxis_opts': opts.AxisOpts(name='日期', type_='time'),
+            'yaxis_opts': opts.AxisOpts(name='日变化', type_='value'),
             }
     line = Line(INIT_OPTS).set_global_opts(**line_global_opts).add_xaxis([*df.columns])
     index = 0
@@ -64,7 +65,7 @@ def render_line(df, title, sort_by):
     for nt in df.itertuples():
         if index == DISPLAY_TOPIC_NUM:
             break
-        line = line.add_yaxis(nt[0], y_axis=[*nt[1:]], is_smooth=True)
+        line = line.add_yaxis(series_name=nt[0], y_axis=[*nt[1:]], is_smooth=True)
         topics.append(nt[0])
         index += 1
     return line, topics
@@ -72,37 +73,39 @@ def render_line(df, title, sort_by):
 
 def render_bar(sr, title):
     bar_global_opts = {
-            'title_opts': opts.TitleOpts(title=title),
-            'tooltip_opts': opts.TooltipOpts(),
             'legend_opts': opts.LegendOpts(is_show=False),
-            'toolbox_opts': opts.ToolboxOpts(is_show=True),
-            'xaxis_opts': opts.AxisOpts(type_='category'),
-            'yaxis_opts': opts.AxisOpts(min_='dataMin', max_='dataMax'),
+            'title_opts': opts.TitleOpts(title=title),
+            'toolbox_opts': opts.ToolboxOpts(),
+            'tooltip_opts': opts.TooltipOpts(axis_pointer_type='shadow', trigger='axis'),
+            'xaxis_opts': opts.AxisOpts(name='话题名', type_='category'),
+            'yaxis_opts': opts.AxisOpts(name='数量', type_=None),
             }
     return (
             Bar(INIT_OPTS)
             .set_global_opts(**bar_global_opts)
             .add_xaxis([*sr.index])
             .add_yaxis(series_name='', yaxis_data=sr.tolist())
-            .reversal_axis()
             .set_series_opts(label_opts=opts.LabelOpts(position='right'))
+            .reversal_axis()
         )
 
 
 def render_scatter(df, title):
+    # TODO display scatter with right labels
+    df.sort_values(by='question_num_summary', inplace=True)
     scatter_global_opts = {
-            'title_opts': opts.TitleOpts(title=title),
-            'tooltip_opts': opts.TooltipOpts(),
             'legend_opts': opts.LegendOpts(is_show=False),
-            'toolbox_opts': opts.ToolboxOpts(is_show=True),
-            'xaxis_opts': opts.AxisOpts(name='问题数', min_='dataMin', max_='dataMax'),
-            'yaxis_opts': opts.AxisOpts(name='关注人数', min_='dataMin', max_='dataMax'),
+            'title_opts': opts.TitleOpts(title=title),
+            'toolbox_opts': opts.ToolboxOpts(),
+            'tooltip_opts': opts.TooltipOpts(axis_pointer_type='cross', formatter='{b}: {@}'),
+            'xaxis_opts': opts.AxisOpts(name='问题数', type_='value'),
+            'yaxis_opts': opts.AxisOpts(name='关注人数', type_='value'),
             }
     return (
             Scatter(INIT_OPTS)
             .set_global_opts(**scatter_global_opts)
-            .add_xaxis()
-            .add_yaxis()
+            .add_xaxis(df.loc[:, 'question_num_summary'].tolist())
+            .add_yaxis(series_name='', y_axis=df.loc[:, 'follower_num_summary'].tolist(), symbol_size=3)
         )
 
 
@@ -124,9 +127,8 @@ def summary():
     follower_bar = render_bar(last_day_follower_sr, title=f'话题关注人数({last_day_follower_sr.name})')
     # topic question/follower display
     topic_follower_question_df = DF.from_dict(topic_summary_dict['topic_follower_question_dict'])
-    charts = [question_line, follower_line, question_bar, follower_bar]
-    # scatter = render_scatter(topic_follower_question_df, title='话题总览')
-    # charts = [question_line, follower_line, question_bar, follower_bar, scatter]
+    scatter = render_scatter(topic_follower_question_df, title='话题总览')
+    charts = [question_line, follower_line, question_bar, follower_bar, scatter]
     scripts = [c.load_javascript() for c in charts]
     return render_template('summary.html', summary_type=summary_type, summary_title=summary_title, host=REMOTE_HOST, scripts=scripts, charts=charts)
 
