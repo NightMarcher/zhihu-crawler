@@ -48,7 +48,7 @@ class Crawler:
             logger.exception(f'Home topic page was changed!\n{e}')
             return None
         home_topics = [hte.text for hte in home_topic_elements]
-        logger.info(f'{len(home_topics)} home topics were founded:\n{home_topics}')
+        logger.info(f'{len(home_topics)} home topics were found:\n{home_topics}')
         return home_topics
 
     @timecost
@@ -58,7 +58,7 @@ class Crawler:
         options.add_argument('--headless') # for debug
         wd = webdriver.Chrome(self.webdriver_dir, chrome_options=options)
         wd.implicitly_wait(0.1)
-        url = os.path.join(self.main_url, 'topics#'+home_topic)
+        url = os.path.join(self.main_url, 'topics#' + home_topic)
         wd.get(url)
         click_times = 0
         while True:
@@ -78,14 +78,14 @@ class Crawler:
         except Exception as e:
             logger.exception(f'Sub home topic pages were changed!\n{e}')
             return None
-        topics = [
-                    {
-                    'topic_id': te.get('href').split(r'/')[-1],
-                    'name': te.find('strong').text,
-                    }
-                for te in topic_elements]
-        logger.info(f'{len(topics)} topics were founded under home topic {home_topic}:\n{topics}.')
-        return topics
+        topic_dicts = [
+                        {
+                        'topic_id': te.get('href').split(r'/')[-1],
+                        'name': te.find('strong').text,
+                        }
+                    for te in topic_elements]
+        logger.info(f'{len(topic_dicts)} topics were found under home topic {home_topic}:\n{topic_dicts}.')
+        return topic_dicts
 
     def _get_relative_topic_ids(self, topic_id, relative_type, page_size):
         offset = 0

@@ -35,7 +35,6 @@ class Analyzer:
                     'summary_last_updated': self.utcnow,
                     'question_num_summary': question_num_summary,
                     'follower_num_summary': follower_num_summary,
-                    # '': ,
                 }
         mongo.update_one(col='topics_snapshot', query={'topics_snapshot_id': topics_snapshot_id}, data=data)
         logger.debug(f'topics_snapshot {topics_snapshot_id} was upserted!')
@@ -63,7 +62,6 @@ class Analyzer:
                     'question_num_dict': question_num_df.to_dict(),
                     'follower_num_dict': follower_num_df.to_dict(),
                     'topic_follower_question_dict': topic_follower_question_df.to_dict(),
-                    # '': ,
                 }
         data.update(query_dict)
         mongo.update_one(col=summary_type + '_topics_summary', query=query_dict, data=data)

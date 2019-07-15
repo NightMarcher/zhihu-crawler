@@ -3,6 +3,6 @@
 host: localhost
 port: 27017
 db: ZhihuCrawler
-username: localhost
-password: localhost
+username: username
+password: password
 

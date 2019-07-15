@@ -12,7 +12,6 @@ CHROME_DRIVER_PATH = 'crawling/chromedriver'
 ZHIHU_URL = 'https://www.zhihu.com/'
 
 LOCAL_TZ = pytz.timezone('Asia/Shanghai')
-
 DATE_FORMAT = '%Y-%m-%d %a'
 TIME_FORMAT = '%I:%M:%S %p'
 
@@ -35,7 +34,6 @@ TOPIC_FIELD_TABLE = {
         'parent_topic_ids': {'hash_type': 'to_hash', 'analyze_type': 'data', },
         'hash_digest': {'hash_type': 'value', 'analyze_type': None, },
         'last_upserted': {'hash_type': None, 'analyze_type': None, },
-        # '': {'hash_type': '', 'analyze_type': '', },
         }
 
 SUMMARY_ATTR_DICT = {

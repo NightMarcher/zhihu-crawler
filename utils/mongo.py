@@ -38,14 +38,16 @@ class Mongo:
 
     def update_one(self, col, query, data, upsert=True):
         if not isinstance(data, dict):
-            logger.warning(f'Following data is not instance of dict, MongoDB can not be updated!\n{data}')
+            logger.warning(f'Following data is not instance of dict, MongoDB can not be upserted!\n{data}')
             return None
         data['last_upserted'] = datetime.utcnow()
         cur = self._db[col].update_one(query, {'$set': data}, upsert=upsert)
         if cur.upserted_id is not None:
-            logger.debug(f'Mongo collection {cur.upserted_id} was inserted!')
-        elif cur.modified_count is 0:
-            logger.error(f'Following query updated failed!\nquery={query}, matched_count={cur.matched_count}, modified_count={cur.modified_count}')
+            logger.debug(f'Mongo collection {cur.upserted_id} was upserted!')
+            return True
+        elif cur.modified_count == 0:
+            logger.error(f'Following upserting failed!\nquery={query}, matched_count={cur.matched_count}, modified_count={cur.modified_count}')
+            return False
 
 mongo = Mongo()
 

@@ -44,7 +44,7 @@ def summary_pagination():
     ]
     page = request.args.get('page', 1, int)
     pagination = Pagination(summary_dicts, per_page=PER_PAGE, page=page)
-    return render_template('pagination.html', summary_pagination=pagination, summary_type=summary_type, summary_pagination_title=SUMMARY_ATTR_DICT[summary_type]['key_word']+'话题总结')
+    return render_template('pagination.html', summary_pagination=pagination, summary_type=summary_type, summary_pagination_title=SUMMARY_ATTR_DICT[summary_type]['key_word'] + '话题总结')
 
 
 def render_line(df, title, sort_by):

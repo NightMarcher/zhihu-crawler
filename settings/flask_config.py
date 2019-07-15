@@ -32,18 +32,5 @@ class Basic:
                         'second': '0'
                         }
             },
-
-                # {
-                #     'id': '',
-                #     'func': ,
-                #     'args': '',
-                #     'trigger': {
-                #         'type': 'cron',
-                #         'day_of_week': '',
-                #         'hour': '',
-                #         'minute': '',
-                #         'second': ''
-                #         }
-            # }
     ]
 
